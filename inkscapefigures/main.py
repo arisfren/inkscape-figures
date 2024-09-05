@@ -18,12 +18,17 @@ from appdirs import user_config_dir
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('inkscape-figures')
 
+if platform.system() == 'Linux':
+	inkscape_command = 'inkscape'
+else:
+	inkscape_command = '/Applications/Inkscape.app/Contents/MacOS/inkscape'
+
 def inkscape(path):
     with warnings.catch_warnings():
         # leaving a subprocess running after interpreter exit raises a
         # warning in Python3.7+
         warnings.simplefilter("ignore", ResourceWarning)
-        subprocess.Popen(['inkscape', str(path)])
+        subprocess.Popen([inkscape_command, str(path)])
 
 def indent(text, indentation=0):
     lines = text.split('\n');
@@ -128,7 +133,7 @@ def maybe_recompile_figure(filepath):
     pdf_path = filepath.parent / (filepath.stem + '.pdf')
     name = filepath.stem
 
-    inkscape_version = subprocess.check_output(['inkscape', '--version'], universal_newlines=True)
+    inkscape_version = subprocess.check_output([inkscape_command, '--version'], universal_newlines=True)
     log.debug(inkscape_version)
 
     # Convert
@@ -144,7 +149,7 @@ def maybe_recompile_figure(filepath):
     # Tuple comparison is like version comparison
     if inkscape_version_number < [1, 0, 0]:
         command = [
-            'inkscape',
+            inkscape_command,
             '--export-area-page',
             '--export-dpi', '300',
             '--export-pdf', pdf_path,
@@ -152,7 +157,7 @@ def maybe_recompile_figure(filepath):
             ]
     else:
         command = [
-            'inkscape', filepath,
+            inkscape_command, filepath,
             '--export-area-page',
             '--export-dpi', '300',
             '--export-type=pdf',
